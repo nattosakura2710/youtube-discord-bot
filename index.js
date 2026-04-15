@@ -1,24 +1,19 @@
-require("dotenv").config();
-
 const { Client, GatewayIntentBits } = require("discord.js");
 const axios = require("axios");
 const express = require("express");
 
-// ===== Webサーバー（Railway対策）=====
+// ===== Webサーバー =====
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ルート
 app.get("/", (req, res) => {
   res.send("Bot is running");
 });
 
-// ヘルスチェック（Railway用）
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-// サーバー起動
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Web server running on port ${PORT}`);
 });
@@ -60,16 +55,12 @@ async function checkLive() {
   }
 }
 
-// ===== 起動時 =====
+// ===== 起動 =====
 client.once("clientReady", () => {
   console.log(`ログイン: ${client.user.tag}`);
 
-  // 起動時に1回チェック
   checkLive();
-
-  // 5分ごとにチェック
   setInterval(checkLive, 5 * 60 * 1000);
 });
 
-// ===== ログイン =====
 client.login(process.env.DISCORD_TOKEN);
