@@ -1,7 +1,21 @@
 require("dotenv").config();
+
 const { Client, GatewayIntentBits } = require("discord.js");
 const axios = require("axios");
+const express = require("express");
 
+// ===== Webサーバー（Railway用）=====
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot is running");
+});
+
+app.listen(3000, () => {
+  console.log("Web server running");
+});
+
+// ===== Discord BOT =====
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
@@ -12,7 +26,7 @@ const DISCORD_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
 
 let lastVideoId = null;
 
-// ライブ枠チェック
+// ===== ライブ枠チェック =====
 async function checkLive() {
   try {
     const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=snippet&type=video&eventType=upcoming&order=date`;
@@ -32,16 +46,17 @@ async function checkLive() {
       channel.send(`🔴 ライブ枠が立ちました！\n${liveUrl}`);
     }
   } catch (err) {
-    console.error(err);
+    console.error("YouTube APIエラー:", err.response?.data || err.message);
   }
 }
 
-// 起動時
-client.once("ready", () => {
+// ===== 起動時 =====
+client.once("clientReady", () => {
   console.log(`ログイン: ${client.user.tag}`);
 
-  // 5分ごとにチェック
+  // 5分ごとチェック
   setInterval(checkLive, 5 * 60 * 1000);
 });
 
+// ===== ログイン =====
 client.login(process.env.DISCORD_TOKEN);
