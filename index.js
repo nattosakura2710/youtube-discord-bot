@@ -4,16 +4,22 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const axios = require("axios");
 const express = require("express");
 
-// ===== Webサーバー（Railway用）=====
+// ===== Webサーバー（Railway対策）=====
 const app = express();
+const PORT = process.env.PORT || 3000;
 
+// ルート
 app.get("/", (req, res) => {
   res.send("Bot is running");
 });
 
-const PORT = process.env.PORT || 3000;
+// ヘルスチェック（Railway用）
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
-app.listen(PORT, () => {
+// サーバー起動
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Web server running on port ${PORT}`);
 });
 
@@ -35,7 +41,7 @@ async function checkLive() {
 
     const res = await axios.get(url);
 
-    if (res.data.items.length === 0) return;
+    if (!res.data.items || res.data.items.length === 0) return;
 
     const video = res.data.items[0];
 
@@ -45,7 +51,9 @@ async function checkLive() {
       const liveUrl = `https://www.youtube.com/watch?v=${video.id.videoId}`;
 
       const channel = await client.channels.fetch(DISCORD_CHANNEL_ID);
-      channel.send(`🔴 ライブ枠が立ちました！\n${liveUrl}`);
+      await channel.send(`🔴 ライブ枠が立ちました！\n${liveUrl}`);
+
+      console.log("通知送信:", liveUrl);
     }
   } catch (err) {
     console.error("YouTube APIエラー:", err.response?.data || err.message);
@@ -56,7 +64,10 @@ async function checkLive() {
 client.once("clientReady", () => {
   console.log(`ログイン: ${client.user.tag}`);
 
-  // 5分ごとチェック
+  // 起動時に1回チェック
+  checkLive();
+
+  // 5分ごとにチェック
   setInterval(checkLive, 5 * 60 * 1000);
 });
 
