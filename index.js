@@ -6,15 +6,13 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.send("Bot is running");
-});
-
-app.get("/health", (req, res) => {
+// 強制的にレスポンス返す
+app.use((req, res) => {
   res.status(200).send("OK");
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+// 明示的にlisten
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Web server running on port ${PORT}`);
 });
 
@@ -29,7 +27,6 @@ const DISCORD_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
 
 let lastVideoId = null;
 
-// ===== ライブ枠チェック =====
 async function checkLive() {
   try {
     const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=snippet&type=video&eventType=upcoming&order=date`;
